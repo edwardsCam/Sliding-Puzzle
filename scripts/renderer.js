@@ -38,6 +38,22 @@ GAME.graphics = (function() {
         GAME.context.restore();
     }
 
+    GAME.drawParticle = function(spec) {
+        GAME.context.save();
+
+        GAME.context.translate(spec.center.x, spec.center.y);
+        GAME.context.rotate(spec.rotation);
+        GAME.context.translate(-spec.center.x, -spec.center.y);
+
+        GAME.context.drawImage(
+            spec.image,
+            spec.center.x - spec.size / 2,
+            spec.center.y - spec.size / 2,
+            spec.size, spec.size);
+
+        GAME.context.restore();
+    }
+
     //------------------------------------------------------------------
     //
     // This is used to create a texture function that can be used by client
@@ -272,6 +288,10 @@ GAME.initialize = function initialize() {
 
     function UpdateGameLogic(delta) {
 
+        if (!fire.isEmpty()) {
+            fire.update(delta/1000);
+        }
+
         GAME.currtime += delta;
         if (GAME.sliding) {
             GAME.slideTimer += delta;
@@ -279,17 +299,27 @@ GAME.initialize = function initialize() {
                 GAME.slideTimer = 0;
                 GAME.sliding = false;
                 var b = GAME.slidingBlock;
+                var n = {x: GAME.slidingBlock.x, y : GAME.slidingBlock.y};
                 if (b.d == 0) {
-                    GAME.grid[b.y][b.x - 1] = GAME.grid[b.y][b.x];
+                    n.x--;
                 } else if (b.d == 1) {
-                    GAME.grid[b.y - 1][b.x] = GAME.grid[b.y][b.x];
+                    n.y--;
                 } else if (b.d == 2) {
-                    GAME.grid[b.y][b.x + 1] = GAME.grid[b.y][b.x];
+                    n.x++;
                 } else {
-                    GAME.grid[b.y + 1][b.x] = GAME.grid[b.y][b.x];
+                    n.y++;
                 }
+                GAME.grid[n.y][n.x] = GAME.grid[b.y][b.x];
                 GAME.grid[b.y][b.x] = -1;
                 GAME.slidingBlock = {};
+
+                var v = GAME.grid[n.y][n.x];
+                if (n.y * GAME.size + n.x == v) {
+                    fire.setCenter( {x : n.x * GAME.blocksize + GAME.blocksize / 2, y : n.y * GAME.blocksize + GAME.blocksize / 2 } );
+                    for (var i = 0; i < 50; i++) {
+                        fire.create();
+                    }
+                }
             }
         }
     }
@@ -354,6 +384,7 @@ GAME.initialize = function initialize() {
                 }
             }
         }
+        fire.render();
     }
 
     function Shuffle() {

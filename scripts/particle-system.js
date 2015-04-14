@@ -103,7 +103,7 @@ GAME.particleSystem = function(spec) {
         for (value in particles) {
             if (particles.hasOwnProperty(value)) {
                 particle = particles[value];
-                GAME.graphics.drawImage(particle);
+                GAME.drawParticle(particle);
             }
         }
     };
