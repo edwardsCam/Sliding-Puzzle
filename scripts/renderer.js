@@ -212,12 +212,10 @@ GAME.initialize = function initialize() {
     GAME.currtime = performance.now();
 
     (function setVariables() {
-        var shuf = GAME.easy ? 100 : 500;
         GAME.pressed = false;
         GAME.over = false;
         GAME.particles = [];
         GAME.grid = [];
-        GAME.empty = {};
         GAME.sliding = false;
         GAME.slidingBlock = {};
         GAME.slideTimer = 0;
@@ -228,19 +226,13 @@ GAME.initialize = function initialize() {
             for (var j = 0; j < GAME.size; j++) {
                 if (i == GAME.size - 1 && j == GAME.size - 1) {
                     GAME.grid[i][j] = -1;
-                    GAME.empty = {
-                        i: GAME.size - 1,
-                        j: GAME.size - 1
-                    };
                 } else {
                     GAME.grid[i][j] = i * GAME.size + j;
                 }
             }
         }
 
-        for (var i = 0; i < shuf; i++) {
-            MoveOneRandomly();
-        }
+        Shuffle();
     }());
 
     //------------------------------------------------------------------
@@ -364,49 +356,79 @@ GAME.initialize = function initialize() {
         }
     }
 
+    function Shuffle() {
+        var empty = {};
+        for (var i = 0; i < GAME.size; i++) {
+            for (var j = 0; j < GAME.size; j++) {
+                if (GAME.grid[i][j] == -1) {
+                    empty.x = j;
+                    empty.y = i;
+                    i = GAME.size;
+                    break;
+                }
+            }
+        }
+
+        var times = GAME.easy ? 20 : 100;
+        var prev = -1;
+        for (var i = 0; i < times; i++) {
+            var r = random(4)-1;
+            var moved = false;
+            while (!moved) {
+                if (r == 0) {
+                    if (prev != 2 && empty.x < GAME.size-1) {
+                        GAME.grid[empty.y][empty.x] = GAME.grid[empty.y][empty.x+1];
+                        GAME.grid[empty.y][empty.x+1] = -1;
+                        empty.x++;
+                        moved = true;
+                        prev = r;
+                        break;
+                    } else {
+                        r = ++r % 4;
+                    }
+                } else if (r == 1) {
+                    if (prev != 3 && empty.y < GAME.size-1) {
+                        GAME.grid[empty.y][empty.x] = GAME.grid[empty.y+1][empty.x];
+                        GAME.grid[empty.y+1][empty.x] = -1;
+                        empty.y++;
+                        moved = true;
+                        prev = r;
+                        break;
+                    } else {
+                        r = ++r % 4;
+                    }
+                } else if (r == 2) {
+                    if (r == 2 && prev != 0 && empty.x > 0) {
+                        GAME.grid[empty.y][empty.x] = GAME.grid[empty.y][empty.x-1];
+                        GAME.grid[empty.y][empty.x-1] = -1;
+                        empty.x--;
+                        moved = true;
+                        prev = r;
+                        break;
+                    } else {
+                        r = ++r % 4;
+                    }
+                } else {
+                    if (r == 3 && prev != 1 && empty.y > 0) {
+                        GAME.grid[empty.y][empty.x] = GAME.grid[empty.y-1][empty.x];
+                        GAME.grid[empty.y-1][empty.x] = -1;
+                        empty.y--;
+                        moved = true;
+                        prev = r;
+                        break;
+                    } else {
+                        r = ++r % 4;
+                    }
+                }
+            }
+        }
+    }
 
     function random(top) {
         var ret = Math.floor(Math.random() * top) + 1;
         if (ret < 0)
             return 0;
         return ret;
-    }
-
-    function MoveOneRandomly() {
-        var r = random(4) - 1;
-        var i = GAME.empty.i;
-        var j = GAME.empty.j;
-        switch (r) {
-
-            case 0:
-                if (i > 0) {
-                    GAME.grid[i][j] = GAME.grid[i - 1][j];
-                    GAME.grid[i - 1][j] = -1;
-                    GAME.empty.i--;
-                }
-                break;
-            case 1:
-                if (j > 0) {
-                    GAME.grid[i][j] = GAME.grid[i][j - 1];
-                    GAME.grid[i][j - 1] = -1;
-                    GAME.empty.j--;
-                }
-                break;
-            case 2:
-                if (i < GAME.size - 1) {
-                    GAME.grid[i][j] = GAME.grid[i + 1][j];
-                    GAME.grid[i + 1][j] = -1;
-                    GAME.empty.i++;
-                }
-                break;
-            case 3:
-                if (j < GAME.size - 1) {
-                    GAME.grid[i][j] = GAME.grid[i][j + 1];
-                    GAME.grid[i][j + 1] = -1;
-                    GAME.empty.j++;
-                }
-                break;
-        }
     }
 
     function MoveBlock(x, y) {
