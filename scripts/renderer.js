@@ -215,12 +215,13 @@ GAME.initialize = function initialize() {
         var shuf = 200;
         GAME.pressed = false;
         GAME.over = false;
-        GAME.currentKey = 0;
-        GAME.keyIsPressed = false;
-        GAME.changed_flag = false;
         GAME.particles = [];
         GAME.grid = [];
         GAME.empty = {};
+        GAME.sliding = false;
+        GAME.slidingBlock = {};
+        GAME.slideTimer = 0;
+        GAME.slideTime = 700;
         for (var i = 0; i < GAME.size; i++) {
             GAME.grid[i] = [];
             for (var j = 0; j < GAME.size; j++) {
@@ -260,24 +261,44 @@ GAME.initialize = function initialize() {
     };
 
     function GatherInput() {
-        if (mousePressed) {
-            if (!GAME.pressed) {
-                if (mousePosition.x <= 512 && mousePosition.y <= 512) {
-                    var xpos = Math.floor(mousePosition.x / GAME.blocksize);
-                    var ypos = Math.floor(mousePosition.y / GAME.blocksize);
-                    MoveBlock(xpos, ypos);
+        if (!GAME.sliding) {
+            if (mousePressed) {
+                if (!GAME.pressed) {
+                    if (mousePosition.x <= 512 && mousePosition.y <= 512) {
+                        var xpos = Math.floor(mousePosition.x / GAME.blocksize);
+                        var ypos = Math.floor(mousePosition.y / GAME.blocksize);
+                        MoveBlock(xpos, ypos);
+                    }
+                    GAME.pressed = true;
                 }
-                GAME.pressed = true;
+            } else {
+                GAME.pressed = false;
             }
-        } else {
-            GAME.pressed = false;
         }
     }
 
     function UpdateGameLogic(delta) {
 
         GAME.currtime += delta;
-
+        if (GAME.sliding) {
+            GAME.slideTimer += delta;
+            if (GAME.slideTimer >= GAME.slideTime) {
+                GAME.slideTimer = 0;
+                GAME.sliding = false;
+                var b = GAME.slidingBlock;
+                if (b.d == 0) {
+                    GAME.grid[b.y][b.x - 1] = GAME.grid[b.y][b.x];
+                } else if (b.d == 1) {
+                    GAME.grid[b.y - 1][b.x] = GAME.grid[b.y][b.x];
+                } else if (b.d == 2) {
+                    GAME.grid[b.y][b.x + 1] = GAME.grid[b.y][b.x];
+                } else {
+                    GAME.grid[b.y + 1][b.x] = GAME.grid[b.y][b.x];
+                }
+                GAME.grid[b.y][b.x] = -1;
+                GAME.slidingBlock = {};
+            }
+        }
     }
 
     function Render(delta) {
@@ -289,20 +310,48 @@ GAME.initialize = function initialize() {
         spec.size = GAME.easy ? 128 : 64;
         var base_str = "img/Tile" + (GAME.easy ? "128" : "64") + "-";
 
-        for (var i = 0; i < GAME.size; i++) {
-            for (var j = 0; j < GAME.size; j++) {
-                var n = GAME.grid[i][j];
-                if (n != -1 && n <= 62) {
-                    var img_str = base_str + n + ".png";
-                    spec.image = GAME.images[img_str];
-                    spec.y = i * GAME.blocksize;
-                    spec.x = j * GAME.blocksize;
-                    GAME.graphics.drawImage(spec);
+        if (GAME.sliding) {
+            for (var i = 0; i < GAME.size; i++) {
+                for (var j = 0; j < GAME.size; j++) {
+                    var n = GAME.grid[i][j];
+                    if (n != -1 && n <= 62) {
+                        var img_str = base_str + n + ".png";
+                        spec.image = GAME.images[img_str];
+                        spec.y = i * GAME.blocksize;
+                        spec.x = j * GAME.blocksize;
+                        var percent = (GAME.blocksize * GAME.slideTimer) / GAME.slideTime;
+                        var b = GAME.slidingBlock;
+                        if (i == b.y && j == b.x) {
+                            if (b.d == 0) {
+                                spec.x -= percent;
+                            } else if (b.d == 1) {
+                                spec.y -= percent;
+                            } else if (b.d == 2) {
+                                spec.x += percent;
+                            } else {
+                                spec.y += percent;
+                            }
+                        }
+                        GAME.graphics.drawImage(spec);
+                    }
+                }
+            }
+        } else {
+            for (var i = 0; i < GAME.size; i++) {
+                for (var j = 0; j < GAME.size; j++) {
+                    var n = GAME.grid[i][j];
+                    if (n != -1 && n <= 62) {
+                        var img_str = base_str + n + ".png";
+                        spec.image = GAME.images[img_str];
+                        spec.y = i * GAME.blocksize;
+                        spec.x = j * GAME.blocksize;
+                        GAME.graphics.drawImage(spec);
+                    }
                 }
             }
         }
-
     }
+
 
     function random(top) {
         var ret = Math.floor(Math.random() * top) + 1;
@@ -348,48 +397,39 @@ GAME.initialize = function initialize() {
         }
     }
 
-    function MoveBlock(i, j) {
+    function MoveBlock(x, y) {
         for (var d = 0; d < 4; d++) {
             if (d == 0) {
-                if (i > 0 && GAME.grid[j][i - 1] == -1) {
-                    Move(i, j, 0);
+                if (x > 0 && GAME.grid[y][x - 1] == -1) {
+                    Move(y, x, 0);
                     break;
                 }
             } else if (d == 1) {
-                if (j > 0 && GAME.grid[j - 1][i] == -1) {
-                    Move(i, j, 1);
+                if (y > 0 && GAME.grid[y - 1][x] == -1) {
+                    Move(y, x, 1);
                     break;
                 }
             } else if (d == 2) {
-                if (i < GAME.size - 1 && GAME.grid[j][i + 1] == -1) {
-                    Move(i, j, 2);
+                if (x < GAME.size - 1 && GAME.grid[y][x + 1] == -1) {
+                    Move(y, x, 2);
                     break;
                 }
             } else {
-                if (j < GAME.size - 1 && GAME.grid[j + 1][i] == -1) {
-                    Move(i, j, 3);
+                if (y < GAME.size - 1 && GAME.grid[y + 1][x] == -1) {
+                    Move(y, x, 3);
                     break;
                 }
             }
         }
     }
 
-    function Move(j, i, dir) {
-        switch (dir) {
-            case 0:
-                GAME.grid[i][j - 1] = GAME.grid[i][j];
-                break;
-            case 1:
-                GAME.grid[i - 1][j] = GAME.grid[i][j];
-                break;
-            case 2:
-                GAME.grid[i][j + 1] = GAME.grid[i][j];
-                break;
-            case 3:
-                GAME.grid[i + 1][j] = GAME.grid[i][j];
-                break;
-        }
-        GAME.grid[i][j] = -1;
+    function Move(i, j, dir) {
+        GAME.sliding = true;
+        GAME.slidingBlock = {
+            x: j,
+            y: i,
+            d: dir
+        };
     }
 
     requestAnimationFrame(gameLoop);
