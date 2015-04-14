@@ -180,7 +180,7 @@ GAME.initialize = function initialize() {
     }
 
     var bw = 200,
-        bh = 50;
+        bh = 70;
 
     var default_colors = {
         'default': all_colors[0],
@@ -188,7 +188,7 @@ GAME.initialize = function initialize() {
         'active': all_colors[2]
     };
 
-    GAME.backButton = new Button(GAME.blocksize * GAME.size + 50, GAME.canvas.height / 2 + 100, bw, bh, 'Back', default_colors,
+    GAME.backButton = new Button(GAME.blocksize * GAME.size + 50, GAME.canvas.height / 2 + 70, bw, bh, 'Back', default_colors,
         function() {
             document.location.href = "index.html";
         });
@@ -212,7 +212,7 @@ GAME.initialize = function initialize() {
     GAME.currtime = performance.now();
 
     (function setVariables() {
-        var shuf = 200;
+        var shuf = GAME.easy ? 100 : 500;
         GAME.pressed = false;
         GAME.over = false;
         GAME.particles = [];
@@ -222,6 +222,7 @@ GAME.initialize = function initialize() {
         GAME.slidingBlock = {};
         GAME.slideTimer = 0;
         GAME.slideTime = 700;
+        GAME.moves = 0;
         for (var i = 0; i < GAME.size; i++) {
             GAME.grid[i] = [];
             for (var j = 0; j < GAME.size; j++) {
@@ -302,9 +303,20 @@ GAME.initialize = function initialize() {
     }
 
     function Render(delta) {
+
+        var canvas2 = GAME.blocksize * GAME.size + 50;
+
         GAME.graphics.clear();
         GAME.backButton.update();
         GAME.backButton.draw();
+
+        GAME.context.fillStyle = "rgb(200,250,200)";
+        GAME.context.fillRect(canvas2, 0, 200, 400);
+
+        GAME.context.fillStyle = "rgb(100, 100, 250)";
+        GAME.context.font = '20px sans-serif';
+        GAME.context.fillText("Time: " + Math.floor( GAME.currtime / 1000), canvas2 + 15, 100);
+        GAME.context.fillText("Moves: " + GAME.moves, canvas2 + 15, 120);
 
         var spec = {};
         spec.size = GAME.easy ? 128 : 64;
@@ -424,6 +436,7 @@ GAME.initialize = function initialize() {
     }
 
     function Move(i, j, dir) {
+        GAME.moves++;
         GAME.sliding = true;
         GAME.slidingBlock = {
             x: j,
