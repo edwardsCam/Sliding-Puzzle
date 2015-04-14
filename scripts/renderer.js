@@ -260,17 +260,15 @@ GAME.initialize = function initialize() {
 
         var delta = performance.now() - GAME.currtime;
 
-        if (!GAME.over) {
-            GatherInput();
-            UpdateGameLogic(delta);
-        }
+        GatherInput();
+        UpdateGameLogic(delta);
         Render(delta);
 
         requestAnimationFrame(gameLoop);
     };
 
     function GatherInput() {
-        if (!GAME.sliding) {
+        if (!GAME.sliding && !GAME.over) {
             if (mousePressed) {
                 if (!GAME.pressed) {
                     if (mousePosition.x <= 512 && mousePosition.y <= 512) {
@@ -287,37 +285,64 @@ GAME.initialize = function initialize() {
     }
 
     function UpdateGameLogic(delta) {
-
+        var updateTime = false;
         if (!fire.isEmpty()) {
-            fire.update(delta/1000);
+            updateTime = true;
+            fire.update(delta / 1000);
         }
 
-        GAME.currtime += delta;
-        if (GAME.sliding) {
-            GAME.slideTimer += delta;
-            if (GAME.slideTimer >= GAME.slideTime) {
-                GAME.slideTimer = 0;
-                GAME.sliding = false;
-                var b = GAME.slidingBlock;
-                var n = {x: GAME.slidingBlock.x, y : GAME.slidingBlock.y};
-                if (b.d == 0) {
-                    n.x--;
-                } else if (b.d == 1) {
-                    n.y--;
-                } else if (b.d == 2) {
-                    n.x++;
-                } else {
-                    n.y++;
-                }
-                GAME.grid[n.y][n.x] = GAME.grid[b.y][b.x];
-                GAME.grid[b.y][b.x] = -1;
-                GAME.slidingBlock = {};
+        if (!GAME.over) {
+            updateTime = true;
+            if (GAME.sliding) {
+                GAME.slideTimer += delta;
+                if (GAME.slideTimer >= GAME.slideTime) {
+                    GAME.slideTimer = 0;
+                    GAME.sliding = false;
+                    var b = GAME.slidingBlock;
+                    var n = {
+                        x: GAME.slidingBlock.x,
+                        y: GAME.slidingBlock.y
+                    };
+                    if (b.d == 0) {
+                        n.x--;
+                    } else if (b.d == 1) {
+                        n.y--;
+                    } else if (b.d == 2) {
+                        n.x++;
+                    } else {
+                        n.y++;
+                    }
+                    GAME.grid[n.y][n.x] = GAME.grid[b.y][b.x];
+                    GAME.grid[b.y][b.x] = -1;
+                    GAME.slidingBlock = {};
 
-                var v = GAME.grid[n.y][n.x];
-                if (n.y * GAME.size + n.x == v) {
-                    fire.setCenter( {x : n.x * GAME.blocksize + GAME.blocksize / 2, y : n.y * GAME.blocksize + GAME.blocksize / 2 } );
-                    for (var i = 0; i < 50; i++) {
-                        fire.create();
+                    var v = GAME.grid[n.y][n.x];
+                    if (n.y * GAME.size + n.x == v) {
+                        fire.setCenter({
+                            x: n.x * GAME.blocksize + GAME.blocksize / 2,
+                            y: n.y * GAME.blocksize + GAME.blocksize / 2
+                        });
+                        for (var i = 0; i < 50; i++) {
+                            fire.create();
+                        }
+                    }
+                }
+            }
+        }
+
+        if (updateTime) {
+            GAME.currtime += delta;
+        }
+
+        GAME.over = true;
+        for (var i = 0; i < GAME.size; i++) {
+            for (var j = 0; j < GAME.size; j++) {
+                if (!(i == GAME.size-1 && j == GAME.size-1)) {
+                    var v = GAME.grid[i][j];
+                    if (i * GAME.size + j != v) {
+                        GAME.over = false;
+                        i = GAME.size;
+                        break;
                     }
                 }
             }
@@ -337,7 +362,7 @@ GAME.initialize = function initialize() {
 
         GAME.context.fillStyle = "rgb(100, 100, 250)";
         GAME.context.font = '20px sans-serif';
-        GAME.context.fillText("Time: " + Math.floor( GAME.currtime / 1000), canvas2 + 15, 100);
+        GAME.context.fillText("Time: " + Math.floor(GAME.currtime / 1000), canvas2 + 15, 100);
         GAME.context.fillText("Moves: " + GAME.moves, canvas2 + 15, 120);
 
         var spec = {};
@@ -384,7 +409,10 @@ GAME.initialize = function initialize() {
                             GAME.graphics.drawImage(spec);
                         }
                     } else {
-                        empty = {x : j, y : i};
+                        empty = {
+                            x: j,
+                            y: i
+                        };
                     }
                 }
             }
@@ -395,6 +423,24 @@ GAME.initialize = function initialize() {
             GAME.context.stroke();
         }
         fire.render();
+
+        if (GAME.over) {
+            GAME.context.fillStyle = "rgb(240, 240, 240)";
+            GAME.context.fillRect(0, GAME.canvas.height / 2 - GAME.canvas.height / 4, GAME.canvas.width, GAME.canvas.height / 3);
+            GAME.context.fillStyle = "rgb(200, 0, 0)";
+            GAME.context.font = '70px sans-serif';
+            GAME.context.fillText("GAME OVER", GAME.canvas.width / 2 - 180, GAME.canvas.height / 2);
+            if (!GAME.drewNameInput) {
+                var div = document.getElementById("id-name-input-div");
+                var str = '<span class="inp-field-left" style="position:absolute;left:500px;top:225px;width:1000px;">';
+                str += 'Name: ';
+                str += '<input type="text" id="id-name-input"/>';
+                str += '<input type="submit" value="Submit" onClick="GAME.submitHighScore();"/>';
+                str += '</span>';
+                div.innerHTML = str;
+                GAME.drewNameInput = true;
+            }
+        }
     }
 
     function Shuffle() {
@@ -410,16 +456,16 @@ GAME.initialize = function initialize() {
             }
         }
 
-        var times = GAME.easy ? 20 : 100;
+        var times = GAME.easy ? 3 : 100;
         var prev = -1;
         for (var i = 0; i < times; i++) {
-            var r = random(4)-1;
+            var r = random(4) - 1;
             var moved = false;
             while (!moved) {
                 if (r == 0) {
-                    if (prev != 2 && empty.x < GAME.size-1) {
-                        GAME.grid[empty.y][empty.x] = GAME.grid[empty.y][empty.x+1];
-                        GAME.grid[empty.y][empty.x+1] = -1;
+                    if (prev != 2 && empty.x < GAME.size - 1) {
+                        GAME.grid[empty.y][empty.x] = GAME.grid[empty.y][empty.x + 1];
+                        GAME.grid[empty.y][empty.x + 1] = -1;
                         empty.x++;
                         moved = true;
                         prev = r;
@@ -428,9 +474,9 @@ GAME.initialize = function initialize() {
                         r = ++r % 4;
                     }
                 } else if (r == 1) {
-                    if (prev != 3 && empty.y < GAME.size-1) {
-                        GAME.grid[empty.y][empty.x] = GAME.grid[empty.y+1][empty.x];
-                        GAME.grid[empty.y+1][empty.x] = -1;
+                    if (prev != 3 && empty.y < GAME.size - 1) {
+                        GAME.grid[empty.y][empty.x] = GAME.grid[empty.y + 1][empty.x];
+                        GAME.grid[empty.y + 1][empty.x] = -1;
                         empty.y++;
                         moved = true;
                         prev = r;
@@ -440,8 +486,8 @@ GAME.initialize = function initialize() {
                     }
                 } else if (r == 2) {
                     if (r == 2 && prev != 0 && empty.x > 0) {
-                        GAME.grid[empty.y][empty.x] = GAME.grid[empty.y][empty.x-1];
-                        GAME.grid[empty.y][empty.x-1] = -1;
+                        GAME.grid[empty.y][empty.x] = GAME.grid[empty.y][empty.x - 1];
+                        GAME.grid[empty.y][empty.x - 1] = -1;
                         empty.x--;
                         moved = true;
                         prev = r;
@@ -451,8 +497,8 @@ GAME.initialize = function initialize() {
                     }
                 } else {
                     if (r == 3 && prev != 1 && empty.y > 0) {
-                        GAME.grid[empty.y][empty.x] = GAME.grid[empty.y-1][empty.x];
-                        GAME.grid[empty.y-1][empty.x] = -1;
+                        GAME.grid[empty.y][empty.x] = GAME.grid[empty.y - 1][empty.x];
+                        GAME.grid[empty.y - 1][empty.x] = -1;
                         empty.y--;
                         moved = true;
                         prev = r;
@@ -506,6 +552,25 @@ GAME.initialize = function initialize() {
             y: i,
             d: dir
         };
+    }
+
+    GAME.submitHighScore = function() {
+        var name = document.getElementById("id-name-input").value;
+
+        addHighScoreTime(name, Math.floor( GAME.currtime/1000));
+        addHighScoreMoves(name, GAME.moves);
+
+        document.location.href = "index.html";
+    }
+
+    function addHighScoreTime(name, time) {
+        var key = [0, name];
+        localStorage[key] = time;
+    }
+
+    function addHighScoreMoves(name, moves) {
+        var key = [1, name];
+        localStorage[key] = moves;
     }
 
     requestAnimationFrame(gameLoop);

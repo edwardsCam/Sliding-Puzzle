@@ -22,3 +22,7 @@ ul {
   display: inline-block;
   vertical-align: top;
 }
+
+.cl-scores {
+  display: inline-block;
+}
