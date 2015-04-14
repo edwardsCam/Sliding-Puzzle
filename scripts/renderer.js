@@ -216,8 +216,8 @@ GAME.initialize = function initialize() {
             y: 0
         },
         speed: {
-            mean: 40,
-            stdev: 10
+            mean: 50,
+            stdev: 20
         },
         lifetime: {
             mean: 2,
@@ -371,18 +371,28 @@ GAME.initialize = function initialize() {
                 }
             }
         } else {
+            var empty = {};
             for (var i = 0; i < GAME.size; i++) {
                 for (var j = 0; j < GAME.size; j++) {
                     var n = GAME.grid[i][j];
-                    if (n != -1 && n <= 62) {
-                        var img_str = base_str + n + ".png";
-                        spec.image = GAME.images[img_str];
-                        spec.y = i * GAME.blocksize;
-                        spec.x = j * GAME.blocksize;
-                        GAME.graphics.drawImage(spec);
+                    if (n != -1) {
+                        if (n <= 62) {
+                            var img_str = base_str + n + ".png";
+                            spec.image = GAME.images[img_str];
+                            spec.y = i * GAME.blocksize;
+                            spec.x = j * GAME.blocksize;
+                            GAME.graphics.drawImage(spec);
+                        }
+                    } else {
+                        empty = {x : j, y : i};
                     }
                 }
             }
+            GAME.context.beginPath();
+            GAME.context.lineWidth = "4";
+            GAME.context.strokeStyle = "red";
+            GAME.context.rect(empty.x * GAME.blocksize, empty.y * GAME.blocksize, GAME.blocksize, GAME.blocksize);
+            GAME.context.stroke();
         }
         fire.render();
     }
