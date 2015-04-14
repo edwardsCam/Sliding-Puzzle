@@ -228,6 +228,10 @@ GAME.initialize = function initialize() {
     GAME.currtime = performance.now();
 
     (function setVariables() {
+        GAME.scoretimes = [];
+        GAME.scoremoves = [];
+        GAME.wintime = 0;
+        GAME.setwintime = false;
         GAME.pressed = false;
         GAME.over = false;
         GAME.particles = [];
@@ -347,6 +351,10 @@ GAME.initialize = function initialize() {
                 }
             }
         }
+        if (GAME.over && !GAME.setwintime) {
+            GAME.wintime = GAME.currtime;
+            GAME.setwintime = true;
+        }
     }
 
     function Render(delta) {
@@ -441,6 +449,18 @@ GAME.initialize = function initialize() {
                 GAME.drewNameInput = true;
             }
         }
+
+        GAME.context.beginPath();
+        GAME.context.lineWidth = "4";
+        GAME.context.strokeStyle = "black";
+        GAME.context.rect(2, 2, GAME.blocksize * GAME.size-2, GAME.blocksize * GAME.size-2);
+        GAME.context.stroke();
+
+        GAME.context.beginPath();
+        GAME.context.lineWidth = "4";
+        GAME.context.strokeStyle = "black";
+        GAME.context.rect(canvas2, 2, 186, 396);
+        GAME.context.stroke();
     }
 
     function Shuffle() {
@@ -456,7 +476,7 @@ GAME.initialize = function initialize() {
             }
         }
 
-        var times = GAME.easy ? 3 : 100;
+        var times = GAME.easy ? 15 : 80;
         var prev = -1;
         for (var i = 0; i < times; i++) {
             var r = random(4) - 1;
@@ -557,15 +577,21 @@ GAME.initialize = function initialize() {
     GAME.submitHighScore = function() {
         var name = document.getElementById("id-name-input").value;
 
-        addHighScoreTime(name, Math.floor( GAME.currtime/1000));
+        addHighScoreTime(name, Math.floor( GAME.wintime/1000));
         addHighScoreMoves(name, GAME.moves);
 
         document.location.href = "index.html";
     }
 
     function addHighScoreTime(name, time) {
-        var key = [0, name];
-        localStorage[key] = time;
+        if (GAME.scoretimes.length < 5) {
+            GAME.scoretimes[GAME.scoretimes.length] = time;
+            var key = [0, name];
+            localStorage[key] = time;
+        }
+        else {
+
+        }
     }
 
     function addHighScoreMoves(name, moves) {

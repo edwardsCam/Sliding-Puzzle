@@ -23,6 +23,12 @@ ul {
   vertical-align: top;
 }
 
-.cl-scores {
-  display: inline-block;
+#id-scores-div {
+  width: 750px ;
+  margin-left: auto ;
+  margin-right: auto ;
+}
+
+.cl-scores2 {
+  display:inline-block;
 }

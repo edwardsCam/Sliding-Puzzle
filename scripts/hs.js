@@ -25,17 +25,37 @@ function showScores() {
 
     time.innerHTML = '';
     moves.innerHTML = '';
+    var disptimes = [];
+    var dispmoves = [];
+
+    function compare(a,b) {
+      if (a.v < b.v)
+         return 1;
+      if (a.v > b.v)
+        return -1;
+      return 0;
+    }
+
     for (item = 0; item < localStorage.length; item++) {
         key = localStorage.key(item);
-
-        if (key.length > 1) {
-            var name = key.substr(2);
-            if (key[0] == 0) {
-                time.innerHTML += ('Name: ' + name + '  Time: ' + localStorage[key] + '<br/>');
-            } else if (key[0] == 1) {
-                moves.innerHTML += ('Name: ' + name + '  Moves: ' + localStorage[key] + '<br/>');
-            }
+        if (key.length > 1 && key[0] == 0) {
+            disptimes[disptimes.length] = {k : key.substr(2), v : localStorage[key]};
         }
+    }
+    for (item = 0; item < localStorage.length; item++) {
+        key = localStorage.key(item);
+        if (key.length > 1 && key[0] == 1) {
+            dispmoves[dispmoves.length] = {k : key.substr(2), v : localStorage[key]};
+        }
+    }
+
+    disptimes.sort(compare);
+    dispmoves.sort(compare);
+
+    for (var i = 0; i < 5; i++) {
+        console.log(disptimes[i]);
+        time.innerHTML += ((i+1) + ': ' + disptimes[i].k + '....      ' + disptimes[i].v + ' seconds<br>');
+        moves.innerHTML += ((i+1) + ': ' + dispmoves[i].k + '....      ' + dispmoves[i].v + ' moves<br>');
     }
 }
 
