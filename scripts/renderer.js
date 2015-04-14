@@ -2,7 +2,7 @@ GAME.graphics = (function() {
     'use strict';
 
     GAME.canvas = document.getElementById('canvas-main');
-    GAME.context = GAME.canvas.getContext('2d');    
+    GAME.context = GAME.canvas.getContext('2d');
 
     //------------------------------------------------------------------
     //
@@ -67,7 +67,7 @@ GAME.initialize = function initialize() {
     'use strict';
 
     var url = document.location.href;
-    GAME.easy = url[url.length-2] == 'u';
+    GAME.easy = url[url.length - 2] == 'u';
     if (GAME.easy) {
         GAME.blocksize = 128;
         GAME.size = 4;
@@ -168,7 +168,7 @@ GAME.initialize = function initialize() {
 
             // text
             var size = GAME.context.measureText(this.text);
-            var x = this.x + (this.width - size.width / 2) / 2;
+            var x = this.x + (this.width - size.width) / 2;
             var y = this.y + (this.height - 15) / 2 + 12;
 
             GAME.context.fillStyle = '#FFF';
@@ -224,9 +224,12 @@ GAME.initialize = function initialize() {
         for (var i = 0; i < GAME.size; i++) {
             GAME.grid[i] = [];
             for (var j = 0; j < GAME.size; j++) {
-                if (i == GAME.size-1 && j == GAME.size-1) {
+                if (i == GAME.size - 1 && j == GAME.size - 1) {
                     GAME.grid[i][j] = -1;
-                    GAME.empty = {i:GAME.size-1, j:GAME.size-1};
+                    GAME.empty = {
+                        i: GAME.size - 1,
+                        j: GAME.size - 1
+                    };
                 } else {
                     GAME.grid[i][j] = i * GAME.size + j;
                 }
@@ -237,94 +240,6 @@ GAME.initialize = function initialize() {
             MoveOneRandomly();
         }
     }());
-
-    function random(top) {
-        var ret = Math.floor(Math.random() * top) + 1;
-        if (ret < 0)
-            return 0;
-        return ret;
-    }
-
-    function MoveOneRandomly() {
-        var r = random(4)-1;
-        var i = GAME.empty.i;
-        var j = GAME.empty.j;
-        switch(r) {
-
-            case 0:
-            if (i > 0) {
-                GAME.grid[i][j] = GAME.grid[i-1][j];
-                GAME.grid[i-1][j] = -1;
-                GAME.empty.i--;
-            }
-            break;
-            case 1:
-            if (j > 0) {
-                GAME.grid[i][j] = GAME.grid[i][j-1];
-                GAME.grid[i][j-1] = -1;
-                GAME.empty.j--;
-            }
-            break;
-            case 2:
-            if (i < GAME.size - 1) {
-                GAME.grid[i][j] = GAME.grid[i+1][j];
-                GAME.grid[i+1][j] = -1;
-                GAME.empty.i++;
-            }
-            break;
-            case 3:
-            if (j < GAME.size - 1) {
-                GAME.grid[i][j] = GAME.grid[i][j+1];
-                GAME.grid[i][j+1] = -1;
-                GAME.empty.j++;
-            }
-            break;
-        }
-    }
-
-    function MoveBlock(i, j) {
-        for (var d = 0; d < 4; d++) {
-            if (d == 0) {
-                if (i > 0 && GAME.grid[j][i-1] == -1) {
-                    Move(i, j, 0);
-                    break;
-                }
-            } else if (d == 1) {
-                if (j > 0 && GAME.grid[j-1][i] == -1) {
-                    Move(i, j, 1);
-                    break;
-                }
-            } else if (d == 2) {
-                if (i < GAME.size-1 && GAME.grid[j][i+1] == -1) {
-                    Move(i, j, 2);
-                    break;
-                }
-            } else {
-                if (j < GAME.size-1 && GAME.grid[j+1][i] == -1) {
-                    Move(i, j, 3);
-                    break;
-                }
-            }
-        }
-    }
-
-    function Move(j, i, dir) {
-        switch (dir) {
-            case 0:
-            GAME.grid[i][j-1] = GAME.grid[i][j];
-            break;
-            case 1:
-            GAME.grid[i-1][j] = GAME.grid[i][j];
-            break;
-            case 2:
-            GAME.grid[i][j+1] = GAME.grid[i][j];
-            break;
-            case 3:
-            GAME.grid[i+1][j] = GAME.grid[i][j];
-            break;
-        }
-        GAME.grid[i][j] = -1;
-    }
 
     //------------------------------------------------------------------
     //
@@ -348,8 +263,8 @@ GAME.initialize = function initialize() {
         if (mousePressed) {
             if (!GAME.pressed) {
                 if (mousePosition.x <= 512 && mousePosition.y <= 512) {
-                    var xpos = Math.floor( mousePosition.x / GAME.blocksize);
-                    var ypos = Math.floor( mousePosition.y / GAME.blocksize);
+                    var xpos = Math.floor(mousePosition.x / GAME.blocksize);
+                    var ypos = Math.floor(mousePosition.y / GAME.blocksize);
                     MoveBlock(xpos, ypos);
                 }
                 GAME.pressed = true;
@@ -372,7 +287,6 @@ GAME.initialize = function initialize() {
 
         var spec = {};
         spec.size = GAME.easy ? 128 : 64;
-
         var base_str = "img/Tile" + (GAME.easy ? "128" : "64") + "-";
 
         for (var i = 0; i < GAME.size; i++) {
@@ -388,6 +302,94 @@ GAME.initialize = function initialize() {
             }
         }
 
+    }
+
+    function random(top) {
+        var ret = Math.floor(Math.random() * top) + 1;
+        if (ret < 0)
+            return 0;
+        return ret;
+    }
+
+    function MoveOneRandomly() {
+        var r = random(4) - 1;
+        var i = GAME.empty.i;
+        var j = GAME.empty.j;
+        switch (r) {
+
+            case 0:
+                if (i > 0) {
+                    GAME.grid[i][j] = GAME.grid[i - 1][j];
+                    GAME.grid[i - 1][j] = -1;
+                    GAME.empty.i--;
+                }
+                break;
+            case 1:
+                if (j > 0) {
+                    GAME.grid[i][j] = GAME.grid[i][j - 1];
+                    GAME.grid[i][j - 1] = -1;
+                    GAME.empty.j--;
+                }
+                break;
+            case 2:
+                if (i < GAME.size - 1) {
+                    GAME.grid[i][j] = GAME.grid[i + 1][j];
+                    GAME.grid[i + 1][j] = -1;
+                    GAME.empty.i++;
+                }
+                break;
+            case 3:
+                if (j < GAME.size - 1) {
+                    GAME.grid[i][j] = GAME.grid[i][j + 1];
+                    GAME.grid[i][j + 1] = -1;
+                    GAME.empty.j++;
+                }
+                break;
+        }
+    }
+
+    function MoveBlock(i, j) {
+        for (var d = 0; d < 4; d++) {
+            if (d == 0) {
+                if (i > 0 && GAME.grid[j][i - 1] == -1) {
+                    Move(i, j, 0);
+                    break;
+                }
+            } else if (d == 1) {
+                if (j > 0 && GAME.grid[j - 1][i] == -1) {
+                    Move(i, j, 1);
+                    break;
+                }
+            } else if (d == 2) {
+                if (i < GAME.size - 1 && GAME.grid[j][i + 1] == -1) {
+                    Move(i, j, 2);
+                    break;
+                }
+            } else {
+                if (j < GAME.size - 1 && GAME.grid[j + 1][i] == -1) {
+                    Move(i, j, 3);
+                    break;
+                }
+            }
+        }
+    }
+
+    function Move(j, i, dir) {
+        switch (dir) {
+            case 0:
+                GAME.grid[i][j - 1] = GAME.grid[i][j];
+                break;
+            case 1:
+                GAME.grid[i - 1][j] = GAME.grid[i][j];
+                break;
+            case 2:
+                GAME.grid[i][j + 1] = GAME.grid[i][j];
+                break;
+            case 3:
+                GAME.grid[i + 1][j] = GAME.grid[i][j];
+                break;
+        }
+        GAME.grid[i][j] = -1;
     }
 
     requestAnimationFrame(gameLoop);

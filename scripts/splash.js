@@ -1,7 +1,7 @@
 var canvas = document.getElementById('canvas-menu'),
     ctx = canvas.getContext('2d');
 
-    window.onload = function() {
+window.onload = function() {
     var logo = new Image();
     logo.onload = function() {
         ctx.drawImage(logo, canvas.width / 2 - 250, canvas.height / 4 - 200);

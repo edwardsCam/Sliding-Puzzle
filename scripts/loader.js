@@ -22,7 +22,6 @@ window.addEventListener('load', function() {
             'preload!scripts/random.js',
             'preload!scripts/particle-system.js',
             'preload!scripts/renderer.js',
-            'preload!img/OldMainFire.png',
             'preload!img/Tile64-0.png',
             'preload!img/Tile64-1.png',
             'preload!img/Tile64-2.png',
